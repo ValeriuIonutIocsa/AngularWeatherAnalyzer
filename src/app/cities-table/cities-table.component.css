@@ -1,0 +1,70 @@
+.example-container {
+    position: relative;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.example-table-container {
+    overflow: auto;
+}
+
+table {
+    height: 100%;
+    width: 100%;
+}
+
+.mat-column-cityName {
+    min-width: 160px;
+    max-width: 160px;
+}
+
+.mat-column-currHighTemp {
+    min-width: 100px;
+    max-width: 100px;
+}
+
+.mat-column-currLowTemp {
+    min-width: 100px;
+    max-width: 100px;
+}
+
+.mat-column-histHighTemp {
+    min-width: 100px;
+    max-width: 100px;
+}
+
+.mat-column-histLowTemp {
+    min-width: 100px;
+    max-width: 100px;
+}
+
+.mat-column-diffHighTemp {
+    min-width: 100px;
+    max-width: 100px;
+}
+
+.mat-column-diffLowTemp {
+    min-width: 64px;
+    max-width: 64px;
+}
+
+.example-loading {
+    background: white;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.example-mat-spinner {
+
+    padding: 50px;
+    align-items: center;
+    justify-content: center;
+}
+
+.example-failed-to-receive-data {
+    max-width: 360px;
+    text-align: center;
+}
