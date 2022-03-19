@@ -37,12 +37,20 @@ export class CitiesTableComponent implements AfterViewInit {
 
       console.log('');
       console.log('loading results');
-      this.data = [];    
+
+      this.data = [];
       this.isLoadingResults = true;
       this.failedToReceiveData = false;
+
       let sortColumn: string = this.sort.active;
       let sortDirection: SortDirection = this.sort.direction;
-      this.createCityList(sortColumn, sortDirection);
+
+      const cities: City[] = JSON.parse(sessionStorage.getItem('cities'));
+      if (cities) {
+        this.sortData(cities, sortColumn, sortDirection)
+      } else {
+        this.createCityList(sortColumn, sortDirection);
+      }
     });
   }
 
@@ -97,7 +105,11 @@ export class CitiesTableComponent implements AfterViewInit {
     ];
 
     const c = this.counter(cities.length);
-    c.finished.then(() => this.sortData(cities, sortColumn, sortDirection));
+    c.finished.then(() => {
+
+      sessionStorage.setItem('cities', JSON.stringify(cities));
+      this.sortData(cities, sortColumn, sortDirection);
+    });
     cities.forEach(city => {
 
       this.parseWeather(city, () => {
