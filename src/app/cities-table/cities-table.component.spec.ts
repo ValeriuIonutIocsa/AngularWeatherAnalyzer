@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSort } from '@angular/material/sort';
-import { CitiesTableComponent } from './cities-table.component';
+import { CitiesTableComponent, City } from './cities-table.component';
 
 describe('CitiesTableComponent', () => {
   let component: CitiesTableComponent;
@@ -30,12 +30,22 @@ describe('CitiesTableComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it(`should increment`, () => {
-    const fixture = TestBed.createComponent(CitiesTableComponent);
-    const app = fixture.componentInstance;
-    const result = app.increment(3);
-    expect(result).toEqual(4);
-    const result2 = app.increment(-1);
-    expect(result2).toEqual(0);
+  it(`should parse weather`, (done) => {
+    fixture = TestBed.createComponent(CitiesTableComponent);
+    component = fixture.componentInstance;
+
+    const cityName: string = "Timisoara";
+    const accuWeatherName: string = "timisoara";
+    const accuWeatherLocationKey: string = "290867";
+    const city: City = new City(cityName, accuWeatherName, accuWeatherLocationKey);
+
+    component.parseWeather(city, () => {
+
+      expect(city.currLowTemp != null).toBeTruthy();
+      expect(city.currHighTemp != null).toBeTruthy();
+      expect(city.histLowTemp != null).toBeTruthy();
+      expect(city.histHighTemp != null).toBeTruthy();
+      done();
+    });
   });
 });

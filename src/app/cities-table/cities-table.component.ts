@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { merge } from 'rxjs';
@@ -118,8 +118,10 @@ export class CitiesTableComponent implements AfterViewInit {
     console.log('results count: ' + this.data.length);
   }
 
-  increment(n: number): number {
-    return n + 1;
+  parseWeather(
+    city: City,
+    callback: Function) {
+    city.parseWeather(this.httpClient, callback);
   }
 }
 
@@ -134,4 +136,164 @@ export interface CityPojo {
   currHighTemp: number;
   histLowTemp: number;
   histHighTemp: number;
+}
+
+export class City {
+
+  cityName: string;
+  accuWeatherName: string;
+  accuWeatherLocationKey: string;
+
+  currLowTemp: number;
+  currHighTemp: number;
+  histLowTemp: number;
+  histHighTemp: number;
+
+  success: boolean;
+
+  constructor(
+    cityName: string,
+    accuWeatherName: string,
+    accuWeatherLocationKey: string) {
+
+    this.cityName = cityName;
+    this.accuWeatherName = accuWeatherName;
+    this.accuWeatherLocationKey = accuWeatherLocationKey;
+  }
+
+  parseWeather(
+    httpClient: HttpClient,
+    callback: Function) {
+
+    const urlString = "https://www.accuweather.com/en/ro/" +
+      this.accuWeatherName + "/" +
+      this.accuWeatherLocationKey + "/daily-weather-forecast/" +
+      this.accuWeatherLocationKey + "?day=1";
+    console.log(urlString);
+
+    this.tryParseWeather(urlString, httpClient, 0, callback);
+  }
+
+  tryParseWeather(
+    urlString: string,
+    httpClient: HttpClient,
+    trialIndex: number,
+    callback: Function) {
+
+    const httpHeaders: HttpHeaders = new HttpHeaders()
+      .append('Content-Type', 'text/plain; charset=utf-8')
+      .append('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X)');
+
+    httpClient.get(urlString, {
+      headers: httpHeaders
+    }).subscribe(
+      data => {
+        console.log(data);
+      },
+      error => {
+        const responseData: string = error.error.text;
+        if (responseData) {
+          this.processWeatherData(responseData, urlString, callback);
+        } else {
+          if (trialIndex < 3) {
+            this.tryParseWeather(urlString, httpClient, trialIndex + 1, callback);
+          }
+        }
+      }
+    );
+  }
+
+  processWeatherData(
+    data: string,
+    urlString: string,
+    callback: Function) {
+
+    var htmlContent: string = "";
+    var inside: boolean = false;
+    var outCount: number = 0;
+    const dataLines: string[] = data.split('\n');
+    dataLines.forEach(dataLine => {
+
+      const trimmedDataLine = dataLine.trim();
+      if (trimmedDataLine === "<div class=\"temp-history content-module\">") {
+        inside = true;
+      }
+      if (inside) {
+
+        htmlContent += dataLine;
+        htmlContent += '\n';
+        if (dataLine.includes("<div")) {
+          outCount++;
+        }
+        if (dataLine.includes("</div>")) {
+
+          outCount--;
+          if (outCount == 0) {
+            return;
+          }
+        }
+      }
+    });
+
+    htmlContent = htmlContent.replace("&#xB0;", "");
+    this.parseWeatherHtmlContent(htmlContent, urlString, callback);
+  }
+
+  parseWeatherHtmlContent(
+    htmlContent: string,
+    urlString: string,
+    callback: Function) {
+
+    const parser: DOMParser = new DOMParser();
+    const xmlDoc = parser.parseFromString(htmlContent, "text/xml");
+
+    var currentTempElement: HTMLElement = null;
+    var historicalTempElement: HTMLElement = null;
+    const divElementList = xmlDoc.getElementsByTagName("div");
+    for (var i = 0; i < divElementList.length; i++) {
+
+      const divElement: HTMLDivElement = divElementList[i];
+      const textContent: string = divElement.textContent;
+      if (textContent === "Forecast") {
+        currentTempElement = divElement.parentElement;
+      } else if (textContent === "Average") {
+        historicalTempElement = divElement.parentElement;
+      }
+    }
+
+    if (currentTempElement != null) {
+
+      const currentHighTempElement = currentTempElement.children[1];
+      const currentHighTempString: string = currentHighTempElement.textContent;
+      this.currHighTemp = parseInt(currentHighTempString);
+
+      const currentLowTempElement = currentTempElement.children[2];
+      const currentLowTempString: string = currentLowTempElement.textContent;
+      this.currLowTemp = parseInt(currentLowTempString);
+    }
+
+    if (historicalTempElement != null) {
+
+      const historicalHighTempElement = historicalTempElement.children[1];
+      const historicalHighTempString: string = historicalHighTempElement.textContent;
+      this.histHighTemp = parseInt(historicalHighTempString);
+
+      const historicalLowTempElement = historicalTempElement.children[2];
+      const historicalLowTempString: string = historicalLowTempElement.textContent;
+      this.histLowTemp = parseInt(historicalLowTempString);
+    }
+
+    if (this.currHighTemp == null || this.currLowTemp == null ||
+      this.histHighTemp == null || this.histLowTemp == null) {
+      console.error("Received null temp for: " + urlString);
+
+    } else {
+      this.success = true;
+      callback();
+      console.log('1111 ' + this.currHighTemp);
+      console.log('1111 ' + this.currLowTemp);
+      console.log('1111 ' + this.histHighTemp);
+      console.log('1111 ' + this.histLowTemp);
+    }
+  }
 }
