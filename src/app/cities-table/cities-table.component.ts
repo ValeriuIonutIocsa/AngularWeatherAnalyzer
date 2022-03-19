@@ -21,9 +21,9 @@ export class CitiesTableComponent implements AfterViewInit {
     'diffLowTemp'
   ];
 
-  data: CityPojo[] = [];
-  isLoadingResults = true;
-  failedToReceiveData = false;
+  data: City[] = [];
+  isLoadingResults: boolean = true;
+  failedToReceiveData: boolean = false;
 
   @ViewChild(MatSort) sort: MatSort;
 
@@ -37,105 +37,187 @@ export class CitiesTableComponent implements AfterViewInit {
 
       console.log('');
       console.log('loading results');
-      this.isLoadingResults = true;
       let sortColumn: string = this.sort.active;
       let sortDirection: SortDirection = this.sort.direction;
-      this.getRepoIssues(sortColumn, sortDirection);
+      this.createCityList(sortColumn, sortDirection);
     });
   }
 
-  getRepoIssues(
+  createCityList(
     sortColumn: string,
-    sortDirection: SortDirection) {
+    sortDirection: string) {
 
-    var localServer: boolean;
-    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-      localServer = true;
-    } else {
-      localServer = false;
-    }
+    const cities: City[] = [
+      new City("Los Angeles", "los-angeles", "347625"),
+      new City("Chicago", "chicago", "348308"),
+      new City("New York", "new-york", "349727"),
+      new City("Vancouver", "vancouver", "53286"),
+      new City("Montreal", "montreal", "56186"),
+      new City("Guadalajara", "guadalajara", "243735"),
+      new City("Mexico City", "mexico-city", "242560"),
+      new City("Rio de Janeiro", "rio-de-janeiro", "45449"),
+      new City("Buenos Aires", "buenos-aires", "7894"),
+      new City("Cape Town", "cape-town", "306633"),
+      new City("Lisbon", "lisbon", "274087"),
+      new City("Madrid", "madrid", "308526"),
+      new City("London", "london", "328328"),
+      new City("Paris", "paris", "623"),
+      new City("Rome", "rome", "213490"),
+      new City("Regensburg", "regensburg", "167556"),
+      new City("Oslo", "oslo", "254946"),
+      new City("Stockholm", "stockholm", "314929"),
+      new City("Helsinki", "helsinki", "133328"),
+      new City("Timisoara", "timisoara", "290867"),
+      new City("Bucharest", "bucharest", "287430"),
+      new City("Iasi", "iasi", "287994"),
+      new City("Chisinau", "chisinau", "242405"),
+      new City("Constanta", "constanta", "287719"),
+      new City("Athens", "athens", "182536"),
+      new City("Katerini", "katerini", "185828"),
+      new City("Jerusalem", "jerusalem", "213225"),
+      new City("Cairo", "cairo", "127164"),
+      new City("Dubai", "dubai", "323091"),
+      new City("Moscow", "moscow", "294021"),
+      new City("Oymyakon", "oymyakon", "571464"),
+      new City("Tehran", "tehran", "210841"),
+      new City("Bengaluru", "bengaluru", "204108"),
+      new City("Beijing", "beijing", "101924"),
+      new City("Hong Kong", "hong-kong", "1123655"),
+      new City("Seoul", "seoul", "226081"),
+      new City("Busan", "busan", "222888"),
+      new City("Tokyo", "tokyo", "226396"),
+      new City("Baybay", "baybay-city", "263946"),
+      new City("Manila", "manila", "264885"),
+      new City("Perth", "perth", "26797"),
+      new City("Sidney", "sidney", "22889"),
+      new City("Honolulu", "honolulu", "348211")
+    ];
 
-    var hostname: string;
-    if (localServer) {
-      hostname = 'localhost';
-    } else {
-      hostname = '79.114.21.193';
-    }
+    const c = this.counter(cities.length);
+    c.finished.then(() => this.sortData(cities, sortColumn, sortDirection));
+    cities.forEach(city => {
 
-    const port: number = 9010;
-
-    let ipAddressRequestUrl = 'http://api.ipify.org/?format=json';
-    console.log('getting public IP address from:');
-    console.log(ipAddressRequestUrl);
-    this.httpClient.get(ipAddressRequestUrl).subscribe(
-      (res: any) => {
-
-        let ipAddress = res.ip;
-        this.sendRequestUrl(hostname, port, ipAddress, sortColumn, sortDirection);
-      },
-      (error: any) => {
-
-        console.error(error);
-        let ipAddress = 'N/A';
-        this.sendRequestUrl(hostname, port, ipAddress, sortColumn, sortDirection);
+      this.parseWeather(city, () => {
+        c.count();
       });
-  }
-
-  sendRequestUrl(
-    hostname: string,
-    port: number,
-    ipAddress: string,
-    sortColumn: string,
-    sortDirection: SortDirection) {
-
-    const requestUrl = `http://${hostname}:${port}/retrieve_table_data` +
-      `?ipAddress=${ipAddress}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
-    console.log('request URL:');
-    console.log(requestUrl);
-
-    this.httpClient.get<CitiesPojo>(requestUrl).subscribe(
-      citiesPojo => {
-        this.computeData(citiesPojo);
-      },
-      error => {
-        console.error(error);
-        this.computeData(null);
-      });
-  }
-
-  computeData(
-    citiesPojo: CitiesPojo) {
-
-    let data: CityPojo[];
-    this.isLoadingResults = false;
-    this.failedToReceiveData = citiesPojo === null;
-    if (citiesPojo === null) {
-      data = [];
-    } else {
-      data = citiesPojo.cityPojoList;
-    }
-    this.data = data;
-    console.log('results count: ' + this.data.length);
+    });
   }
 
   parseWeather(
     city: City,
     callback: Function) {
+
     city.parseWeather(this.httpClient, callback);
+  }
+
+  sortData(
+    cities: City[],
+    sortColumn: string,
+    sortDirection: string) {
+
+    cities.sort((city, otherCity) => {
+
+      var result: number = 0;
+      if ("cityName" === sortColumn) {
+        if ("asc" === sortDirection) {
+          result = this.compareStrings(city.cityName, otherCity.cityName);
+        } else if ("desc" === sortDirection) {
+          result = this.compareStringsRev(city.cityName, otherCity.cityName);
+        }
+      } else if ("currHighTemp" === sortColumn) {
+        if ("asc" === sortDirection) {
+          result = this.compareNumbers(city.currHighTemp, otherCity.currHighTemp);
+        } else if ("desc" === sortDirection) {
+          result = this.compareNumbersRev(city.currHighTemp, otherCity.currHighTemp);
+        }
+      } else if ("currLowTemp" === sortColumn) {
+        if ("asc" === sortDirection) {
+          result = this.compareNumbers(city.currLowTemp, otherCity.currLowTemp);
+        } else if ("desc" === sortDirection) {
+          result = this.compareNumbersRev(city.currLowTemp, otherCity.currLowTemp);
+        }
+      } else if ("histHighTemp" === sortColumn) {
+        if ("asc" === sortDirection) {
+          result = this.compareNumbers(city.histHighTemp, otherCity.histHighTemp);
+        } else if ("desc" === sortDirection) {
+          result = this.compareNumbersRev(city.histHighTemp, otherCity.histHighTemp);
+        }
+      } else if ("histLowTemp" === sortColumn) {
+        if ("asc" === sortDirection) {
+          result = this.compareNumbers(city.histLowTemp, otherCity.histLowTemp);
+        } else if ("desc" === sortDirection) {
+          result = this.compareNumbersRev(city.histLowTemp, otherCity.histLowTemp);
+        }
+      } else if ("diffHighTemp" === sortColumn) {
+        if ("asc" === sortDirection) {
+          result = this.compareNumbers(
+            city.currHighTemp - city.histHighTemp,
+            otherCity.currHighTemp - otherCity.histHighTemp);
+        } else if ("desc" === sortDirection) {
+          result = this.compareNumbersRev(
+            city.currHighTemp - city.histHighTemp,
+            otherCity.currHighTemp - otherCity.histHighTemp);
+        }
+      } else if ("diffLowTemp" === sortColumn) {
+        if ("asc" === sortDirection) {
+          result = this.compareNumbers(
+            city.currLowTemp - city.histLowTemp,
+            otherCity.currLowTemp - otherCity.histLowTemp);
+        } else if ("desc" === sortDirection) {
+          result = this.compareNumbersRev(
+            city.currLowTemp - city.histLowTemp,
+            otherCity.currLowTemp - otherCity.histLowTemp);
+        }
+      }
+      return result;
+    });
+    this.data = cities;
+    this.isLoadingResults = false;
+  }
+
+  compareStrings(a: string, b: string) {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  }
+
+  compareStringsRev(a: string, b: string) {
+    if (a < b) return 1;
+    if (a > b) return -1;
+    return 0;
+  }
+
+  compareNumbers(a: number, b: number) {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  }
+
+  compareNumbersRev(a: number, b: number) {
+    if (a < b) return 1;
+    if (a > b) return -1;
+    return 0;
+  }
+
+  counter(
+    n: number): Counter {
+
+    let i = 0;
+    const res: Counter = new Counter();
+    res.finished = new Promise(resolve => {
+      res.count = () => {
+        if (++i == n)
+          resolve();
+      };
+    });
+    return res;
   }
 }
 
-export interface CitiesPojo {
-  cityPojoList: CityPojo[];
-}
+class Counter {
 
-export interface CityPojo {
-
-  cityName: string;
-  currLowTemp: number;
-  currHighTemp: number;
-  histLowTemp: number;
-  histHighTemp: number;
+  finished: Promise<void>;
+  count: Function;
 }
 
 export class City {
@@ -181,8 +263,7 @@ export class City {
     callback: Function) {
 
     const httpHeaders: HttpHeaders = new HttpHeaders()
-      .append('Content-Type', 'text/plain; charset=utf-8')
-      .append('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X)');
+      .append('Content-Type', 'text/plain; charset=utf-8');
 
     httpClient.get(urlString, {
       headers: httpHeaders
@@ -235,7 +316,7 @@ export class City {
       }
     });
 
-    htmlContent = htmlContent.replace("&#xB0;", "");
+    htmlContent = htmlContent.split("&#xB0;").join("");
     this.parseWeatherHtmlContent(htmlContent, urlString, callback);
   }
 
@@ -245,7 +326,7 @@ export class City {
     callback: Function) {
 
     const parser: DOMParser = new DOMParser();
-    const xmlDoc = parser.parseFromString(htmlContent, "text/xml");
+    const xmlDoc = parser.parseFromString(htmlContent, "text/html");
 
     var currentTempElement: HTMLElement = null;
     var historicalTempElement: HTMLElement = null;
@@ -290,10 +371,6 @@ export class City {
     } else {
       this.success = true;
       callback();
-      console.log('1111 ' + this.currHighTemp);
-      console.log('1111 ' + this.currLowTemp);
-      console.log('1111 ' + this.histHighTemp);
-      console.log('1111 ' + this.histLowTemp);
     }
   }
 }
