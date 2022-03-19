@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { MatSort, SortDirection } from '@angular/material/sort';
-import { merge, Observable, of as observableOf, throwError } from 'rxjs';
-import { catchError, map, startWith, switchMap } from 'rxjs/operators';
+import { merge } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-cities-table',
@@ -116,6 +116,10 @@ export class CitiesTableComponent implements AfterViewInit {
     }
     this.data = data;
     console.log('results count: ' + this.data.length);
+  }
+
+  add(n:number):number {
+    return n + 1;
   }
 }
 
