@@ -37,6 +37,9 @@ export class CitiesTableComponent implements AfterViewInit {
 
       console.log('');
       console.log('loading results');
+      this.data = [];    
+      this.isLoadingResults = true;
+      this.failedToReceiveData = false;
       let sortColumn: string = this.sort.active;
       let sortDirection: SortDirection = this.sort.direction;
       this.createCityList(sortColumn, sortDirection);
