@@ -30,9 +30,12 @@ describe('CitiesTableComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it(`should add`, () => {
+  it(`should increment`, () => {
     const fixture = TestBed.createComponent(CitiesTableComponent);
     const app = fixture.componentInstance;
-    expect(app.add(3)).toEqual(4);
+    const result = app.increment(3);
+    expect(result).toEqual(4);
+    const result2 = app.increment(-1);
+    expect(result2).toEqual(0);
   });
 });

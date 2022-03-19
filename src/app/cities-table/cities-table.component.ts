@@ -118,7 +118,7 @@ export class CitiesTableComponent implements AfterViewInit {
     console.log('results count: ' + this.data.length);
   }
 
-  add(n:number):number {
+  increment(n: number): number {
     return n + 1;
   }
 }
