@@ -311,7 +311,7 @@ export class City {
     dataLines.forEach(dataLine => {
 
       const trimmedDataLine = dataLine.trim();
-      if (trimmedDataLine === "<div class=\"temp-history content-module\">") {
+      if (trimmedDataLine === "<div class=\"temp-history content-module non-ad\">") {
         inside = true;
       }
       if (inside) {
