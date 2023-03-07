@@ -1,4 +1,12 @@
 {
     "vscode.tsc.compiler.alertTSConfigChanges": "never",
-    "vscode.tsc.compiler.alertOnError": "never"
+    "vscode.tsc.compiler.alertOnError": "never",
+    "cSpell.words": [
+        "accu",
+        "Baybay",
+        "Bengaluru",
+        "Busan",
+        "Katerini",
+        "Oymyakon"
+    ]
 }
