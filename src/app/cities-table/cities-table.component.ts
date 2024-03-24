@@ -1,8 +1,10 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { merge } from 'rxjs';
 import { startWith } from 'rxjs/operators';
+import { fetchWeatherApi } from 'openmeteo';
+
+import { CityData, HistDataEntry, SupabaseService } from './../supabase.service'
 
 @Component({
   selector: 'app-cities-table',
@@ -10,6 +12,8 @@ import { startWith } from 'rxjs/operators';
   styleUrls: ['./cities-table.component.css']
 })
 export class CitiesTableComponent implements AfterViewInit {
+
+  private readonly supabase: SupabaseService
 
   displayedColumns: string[] = [
     'cityName',
@@ -28,15 +32,16 @@ export class CitiesTableComponent implements AfterViewInit {
   @ViewChild(MatSort) sort: MatSort;
 
   constructor(
-    private httpClient: HttpClient) {
+    supabase: SupabaseService) {
+
+    this.supabase = supabase;
   }
 
   ngAfterViewInit() {
 
     merge(this.sort.sortChange).pipe(startWith({})).subscribe(() => {
 
-      console.log('');
-      console.log('loading results');
+      console.log(' --> loading results');
 
       this.data = [];
       this.isLoadingResults = true;
@@ -59,50 +64,52 @@ export class CitiesTableComponent implements AfterViewInit {
     sortDirection: string) {
 
     const cities: City[] = [
-      new City("Los Angeles", "los-angeles", "347625"),
-      new City("Chicago", "chicago", "348308"),
-      new City("New York", "new-york", "349727"),
-      new City("Vancouver", "vancouver", "53286"),
-      new City("Montreal", "montreal", "56186"),
-      new City("Guadalajara", "guadalajara", "243735"),
-      new City("Mexico City", "mexico-city", "242560"),
-      new City("Rio de Janeiro", "rio-de-janeiro", "45449"),
-      new City("Buenos Aires", "buenos-aires", "7894"),
-      new City("Cape Town", "cape-town", "306633"),
-      new City("Lisbon", "lisbon", "274087"),
-      new City("Madrid", "madrid", "308526"),
-      new City("London", "london", "328328"),
-      new City("Paris", "paris", "623"),
-      new City("Rome", "rome", "213490"),
-      new City("Regensburg", "regensburg", "167556"),
-      new City("Oslo", "oslo", "254946"),
-      new City("Stockholm", "stockholm", "314929"),
-      new City("Helsinki", "helsinki", "133328"),
-      new City("Timisoara", "timisoara", "290867"),
-      new City("Bucharest", "bucharest", "287430"),
-      new City("Iasi", "iasi", "287994"),
-      new City("Chisinau", "chisinau", "242405"),
-      new City("Constanta", "constanta", "287719"),
-      new City("Athens", "athens", "182536"),
-      new City("Katerini", "katerini", "185828"),
-      new City("Jerusalem", "jerusalem", "213225"),
-      new City("Cairo", "cairo", "127164"),
-      new City("Dubai", "dubai", "323091"),
-      new City("Moscow", "moscow", "294021"),
-      new City("Oymyakon", "oymyakon", "571464"),
-      new City("Tehran", "tehran", "210841"),
-      new City("Bengaluru", "bengaluru", "204108"),
-      new City("Beijing", "beijing", "101924"),
-      new City("Hong Kong", "hong-kong", "1123655"),
-      new City("Seoul", "seoul", "226081"),
-      new City("Busan", "busan", "222888"),
-      new City("Tokyo", "tokyo", "226396"),
-      new City("Baybay", "baybay-city", "263946"),
-      new City("Manila", "manila", "264885"),
-      new City("Perth", "perth", "26797"),
-      new City("Sidney", "sidney", "22889"),
-      new City("Honolulu", "honolulu", "348211")
+      new City("Los Angeles", 34.0522, -118.2437),
+      new City("Chicago", 41.85, -87.65),
+      new City("New York", 40.7143, -74.006),
+      new City("Vancouver", 49.2497, -123.1193),
+      new City("Montreal", 45.5088, -73.5878),
+      new City("Guadalajara", 20.6668, -103.3918),
+      new City("Mexico City", 19.4285, -99.1277),
+      new City("Rio de Janeiro", -22.9064, -43.1822),
+      new City("Buenos Aires", -34.6131, -58.3772),
+      new City("Cape Town", -33.9258, 18.4232),
+      new City("Lisbon", 38.7167, -9.1333),
+      new City("Madrid", 40.4165, -3.7026),
+      new City("London", 51.5085, -0.1257),
+      new City("Paris", 48.8534, 2.3488),
+      new City("Rome", 41.8919, 12.5113),
+      new City("Regensburg", 49.0151, 12.1016),
+      new City("Oslo", 59.9127, 10.7461),
+      new City("Stockholm", 59.3294, 18.0687),
+      new City("Helsinki", 60.3172, 24.9633),
+      new City("Timisoara", 45.7537, 21.2257),
+      new City("Bucharest", 44.4323, 26.1063),
+      new City("Iasi", 47.1667, 27.6),
+      new City("Chisinau", 47.0056, 28.8575),
+      new City("Constanta", 44.1807, 28.6343),
+      new City("Athens", 37.9838, 23.7278),
+      new City("Katerini", 40.2696, 22.5061),
+      new City("Jerusalem", 31.769, 35.2163),
+      new City("Cairo", 30.0626, 31.2497),
+      new City("Dubai", 25.0772, 55.3093),
+      new City("Moscow", 55.7522, 37.6156),
+      new City("Oymyakon", 63.4622, 142.7949),
+      new City("Tehran", 35.6944, 51.4215),
+      new City("Bengaluru", 12.9719, 77.5937),
+      new City("Beijing", 39.9075, 116.3972),
+      new City("Hong Kong", 22.2783, 114.1747),
+      new City("Seoul", 37.566, 126.9784),
+      new City("Busan", 35.1017, 129.03),
+      new City("Tokyo", 35.6895, 139.6917),
+      new City("Baybay", 10.6785, 124.8006),
+      new City("Manila", 14.6042, 120.9822),
+      new City("Perth", -31.9522, 115.8614),
+      new City("Sidney", 40.2842, -84.1555),
+      new City("Honolulu", 21.3069, -157.8583)
     ];
+
+    console.log('configured ' + cities.length + ' cities');
 
     const c = this.counter(cities.length);
     c.finished.then(() => {
@@ -110,19 +117,27 @@ export class CitiesTableComponent implements AfterViewInit {
       sessionStorage.setItem('cities', JSON.stringify(cities));
       this.sortData(cities, sortColumn, sortDirection);
     });
-    cities.forEach(city => {
 
-      this.parseWeather(city, () => {
-        c.count();
-      });
+    console.log(' --> loading city data from the database');
+    this.supabase.loadCityData().then((cityDataList) => {
+
+      console.log('loaded ' + cityDataList.length + ' city data entries from the database');
+      const date = new Date();
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+
+      console.log(' --> loading historical data from the database');
+      this.supabase.loadHistData(month, day).then((histDataEntryList) => {
+
+        console.log('loaded ' + histDataEntryList.length + ' historical data entries from the database');
+        cities.forEach(city => {
+
+          city.parseWeather(cityDataList, histDataEntryList).then(() => {
+            c.count();
+          });
+        });
+      })
     });
-  }
-
-  parseWeather(
-    city: City,
-    callback: Function) {
-
-    city.parseWeather(this.httpClient, callback);
   }
 
   sortData(
@@ -130,6 +145,7 @@ export class CitiesTableComponent implements AfterViewInit {
     sortColumn: string,
     sortDirection: string) {
 
+    console.log(' --> sorting city list');
     cities.sort((city, otherCity) => {
 
       var result: number = 0;
@@ -238,8 +254,8 @@ class Counter {
 export class City {
 
   cityName: string;
-  accuWeatherName: string;
-  accuWeatherLocationKey: string;
+  latitude: number;
+  longitude: number;
 
   currLowTemp: number;
   currHighTemp: number;
@@ -250,141 +266,81 @@ export class City {
 
   constructor(
     cityName: string,
-    accuWeatherName: string,
-    accuWeatherLocationKey: string) {
+    latitude: number,
+    longitude: number) {
 
     this.cityName = cityName;
-    this.accuWeatherName = accuWeatherName;
-    this.accuWeatherLocationKey = accuWeatherLocationKey;
+    this.latitude = latitude;
+    this.longitude = longitude;
   }
 
-  parseWeather(
-    httpClient: HttpClient,
-    callback: Function) {
+  async parseWeather(
+    cityDataList: CityData[],
+    histDataEntryList: HistDataEntry[]) {
 
-    const urlString = "https://www.accuweather.com/en/ro/" +
-      this.accuWeatherName + "/" +
-      this.accuWeatherLocationKey + "/daily-weather-forecast/" +
-      this.accuWeatherLocationKey + "?day=1";
-    console.log(urlString);
+    console.log(' --> parsing current weather for city ' + this.cityName);
+    this.parseCurrentWeather().then(() => {
 
-    this.tryParseWeather(urlString, httpClient, 0, callback);
+      console.log(' --> parsing historical weather for city ' + this.cityName);
+      this.parseHistWeather(cityDataList, histDataEntryList);
+    });
   }
 
-  tryParseWeather(
-    urlString: string,
-    httpClient: HttpClient,
-    trialIndex: number,
-    callback: Function) {
+  async parseCurrentWeather() {
 
-    const httpHeaders: HttpHeaders = new HttpHeaders()
-      .append('Content-Type', 'text/plain; charset=utf-8');
+    const params = {
+      "latitude": this.latitude,
+      "longitude": this.longitude,
+      "daily": ["temperature_2m_max", "temperature_2m_min"],
+      "forecast_days": 1
+    };
+    const url = "https://api.open-meteo.com/v1/forecast";
+    const responses = await fetchWeatherApi(url, params);
 
-    httpClient.get(urlString, {
-      headers: httpHeaders
-    }).subscribe(
-      data => {
-        console.log(data);
-      },
-      error => {
-        const responseData: string = error.error.text;
-        if (responseData) {
-          this.processWeatherData(responseData, urlString, callback);
-        } else {
-          if (trialIndex < 3) {
-            this.tryParseWeather(urlString, httpClient, trialIndex + 1, callback);
-          }
-        }
+    const range = (start: number, stop: number, step: number) =>
+      Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+
+    const response = responses[0];
+
+    const utcOffsetSeconds = response.utcOffsetSeconds();
+    const daily = response.daily()!;
+
+    const weatherData = {
+
+      daily: {
+        time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
+          (t) => new Date((t + utcOffsetSeconds) * 1000)
+        ),
+        temperature2mMax: daily.variables(0)!.valuesArray()!,
+        temperature2mMin: daily.variables(1)!.valuesArray()!,
       }
-    );
+    };
+
+    for (let i = 0; i < weatherData.daily.time.length; i++) {
+
+      this.currLowTemp = Math.floor(weatherData.daily.temperature2mMin[i]);
+      this.currHighTemp = Math.floor(weatherData.daily.temperature2mMax[i]);
+    }
   }
 
-  processWeatherData(
-    data: string,
-    urlString: string,
-    callback: Function) {
+  parseHistWeather(
+    cityDataList: CityData[],
+    histDataEntryList: HistDataEntry[]) {
 
-    var htmlContent: string = "";
-    var inside: boolean = false;
-    var outCount: number = 0;
-    const dataLines: string[] = data.split('\n');
-    dataLines.forEach(dataLine => {
+    cityDataList.forEach(cityData => {
 
-      if (dataLine.includes("<div class=\"temp-history content-module")) {
-        inside = true;
-      }
-      if (inside) {
+      if (cityData.cityName == this.cityName) {
 
-        htmlContent += dataLine;
-        htmlContent += '\n';
-        if (dataLine.includes("<div")) {
-          outCount++;
-        }
-        if (dataLine.includes("</div>")) {
+        const cityId = cityData.cityId;
+        histDataEntryList.forEach(histDataEntry => {
 
-          outCount--;
-          if (outCount == 0) {
-            return;
+          if (histDataEntry.cityId == cityId) {
+
+            this.histLowTemp = Math.floor(histDataEntry.minTempDegCel);
+            this.histHighTemp = Math.floor(histDataEntry.maxTempDegCel);
           }
-        }
+        });
       }
     });
-
-    htmlContent = htmlContent.split("&#xB0;").join("");
-    this.parseWeatherHtmlContent(htmlContent, urlString, callback);
-  }
-
-  parseWeatherHtmlContent(
-    htmlContent: string,
-    urlString: string,
-    callback: Function) {
-
-    const parser: DOMParser = new DOMParser();
-    const xmlDoc = parser.parseFromString(htmlContent, "text/html");
-
-    var currentTempElement: HTMLElement = null;
-    var historicalTempElement: HTMLElement = null;
-    const divElementList = xmlDoc.getElementsByTagName("div");
-    for (var i = 0; i < divElementList.length; i++) {
-
-      const divElement: HTMLDivElement = divElementList[i];
-      const textContent: string = divElement.textContent;
-      if (textContent === "Forecast") {
-        currentTempElement = divElement.parentElement;
-      } else if (textContent === "Average") {
-        historicalTempElement = divElement.parentElement;
-      }
-    }
-
-    if (currentTempElement != null) {
-
-      const currentHighTempElement = currentTempElement.children[1];
-      const currentHighTempString: string = currentHighTempElement.textContent;
-      this.currHighTemp = parseInt(currentHighTempString);
-
-      const currentLowTempElement = currentTempElement.children[2];
-      const currentLowTempString: string = currentLowTempElement.textContent;
-      this.currLowTemp = parseInt(currentLowTempString);
-    }
-
-    if (historicalTempElement != null) {
-
-      const historicalHighTempElement = historicalTempElement.children[1];
-      const historicalHighTempString: string = historicalHighTempElement.textContent;
-      this.histHighTemp = parseInt(historicalHighTempString);
-
-      const historicalLowTempElement = historicalTempElement.children[2];
-      const historicalLowTempString: string = historicalLowTempElement.textContent;
-      this.histLowTemp = parseInt(historicalLowTempString);
-    }
-
-    if (this.currHighTemp == null || this.currLowTemp == null ||
-      this.histHighTemp == null || this.histLowTemp == null) {
-      console.error("Received null temp for: " + urlString);
-
-    } else {
-      this.success = true;
-      callback();
-    }
   }
 }

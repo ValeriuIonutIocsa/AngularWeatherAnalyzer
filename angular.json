@@ -29,7 +29,11 @@
             "styles": [
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "@supabase/supabase-js",
+              "openmeteo"
+            ]
           },
           "configurations": {
             "production": {
@@ -105,6 +109,5 @@
         }
       }
     }
-  },
-  "defaultProject": "AngularWeatherAnalyzer"
+  }
 }

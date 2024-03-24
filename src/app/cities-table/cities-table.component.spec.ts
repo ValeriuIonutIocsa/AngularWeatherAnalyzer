@@ -35,9 +35,9 @@ describe('CitiesTableComponent', () => {
     component = fixture.componentInstance;
 
     const cityName: string = "Timisoara";
-    const accuWeatherName: string = "timisoara";
-    const accuWeatherLocationKey: string = "290867";
-    const city: City = new City(cityName, accuWeatherName, accuWeatherLocationKey);
+    const latitude: number = 45.7537;
+    const longitude: number = 21.2257;
+    const city: City = new City(cityName, latitude, longitude);
 
     component.parseWeather(city, () => {
 

@@ -8,7 +8,9 @@
         "Busan",
         "devkit",
         "Katerini",
+        "openmeteo",
         "Oymyakon",
-        "progressbar"
+        "progressbar",
+        "supabase"
     ]
 }
