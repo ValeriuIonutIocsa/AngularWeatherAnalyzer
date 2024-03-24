@@ -109,6 +109,14 @@ export class CitiesTableComponent implements AfterViewInit {
       new City("Honolulu", 21.3069, -157.8583)
     ];
 
+    this.parseWeather(cities, sortColumn, sortDirection);
+  }
+
+  parseWeather(
+    cities: City[],
+    sortColumn: string,
+    sortDirection: string) {
+
     console.log('configured ' + cities.length + ' cities');
 
     const c = this.counter(cities.length);

@@ -38,14 +38,14 @@ describe('CitiesTableComponent', () => {
     const latitude: number = 45.7537;
     const longitude: number = 21.2257;
     const city: City = new City(cityName, latitude, longitude);
+    const cities: City[] = [city];
 
-    component.parseWeather(city, () => {
+    component.parseWeather(cities, '', '');
 
-      expect(city.currLowTemp != null).toBeTruthy();
-      expect(city.currHighTemp != null).toBeTruthy();
-      expect(city.histLowTemp != null).toBeTruthy();
-      expect(city.histHighTemp != null).toBeTruthy();
-      done();
-    });
+    expect(city.currLowTemp != null).toBeTruthy();
+    expect(city.currHighTemp != null).toBeTruthy();
+    expect(city.histLowTemp != null).toBeTruthy();
+    expect(city.histHighTemp != null).toBeTruthy();
+    done();
   });
 });
