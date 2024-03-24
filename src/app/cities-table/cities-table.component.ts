@@ -140,7 +140,7 @@ export class CitiesTableComponent implements AfterViewInit {
         console.log('loaded ' + histDataEntryList.length + ' historical data entries from the database');
         cities.forEach(city => {
 
-          city.parseWeather(cityDataList, histDataEntryList).then(() => {
+          city.parseWeather(cityDataList, histDataEntryList, () => {
             c.count();
           });
         });
@@ -284,13 +284,15 @@ export class City {
 
   async parseWeather(
     cityDataList: CityData[],
-    histDataEntryList: HistDataEntry[]) {
+    histDataEntryList: HistDataEntry[],
+    callback: Function) {
 
     console.log(' --> parsing current weather for city ' + this.cityName);
     this.parseCurrentWeather().then(() => {
 
       console.log(' --> parsing historical weather for city ' + this.cityName);
       this.parseHistWeather(cityDataList, histDataEntryList);
+      callback();
     });
   }
 
@@ -335,20 +337,20 @@ export class City {
     cityDataList: CityData[],
     histDataEntryList: HistDataEntry[]) {
 
-    cityDataList.forEach(cityData => {
+    for (const cityData of cityDataList) {
 
       if (cityData.cityName == this.cityName) {
 
         const cityId = cityData.cityId;
-        histDataEntryList.forEach(histDataEntry => {
+        for (const histDataEntry of histDataEntryList) {
 
           if (histDataEntry.cityId == cityId) {
 
             this.histLowTemp = Math.floor(histDataEntry.minTempDegCel);
             this.histHighTemp = Math.floor(histDataEntry.maxTempDegCel);
           }
-        });
+        }
       }
-    });
+    }
   }
 }
