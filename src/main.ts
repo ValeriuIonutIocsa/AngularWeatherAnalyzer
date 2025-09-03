@@ -1,12 +1,17 @@
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideAppInitializer, inject } from '@angular/core';
 
-import { AppModule } from './app/app.module';
-import { environment } from './environments/environment';
+import { AppComponent } from './app/app.component';
+import { EnvService } from './app/services/env.service';
 
-if (environment.production) {
-  enableProdMode();
-}
+bootstrapApplication(AppComponent, {
 
-platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+  providers: [
+
+    provideAppInitializer(() => {
+
+      const envService = inject(EnvService);
+      return envService.loadConfig();
+    }),
+  ],
+}).catch(err => console.error(err));

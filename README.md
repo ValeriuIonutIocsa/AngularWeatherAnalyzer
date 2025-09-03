@@ -1,6 +1,20 @@
 # AngularWeatherAnalyzer
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.0.5.
+## Netlify local server
+
+To launch a local Netlify app, follow these steps:
+
+1. Install Netlify CLI (if not already installed): Open your terminal and run:<br>
+ `npm install -g netlify-cli`
+
+2. Login to Netlify: Authenticate with your Netlify account:<br>
+`netlify login`
+
+3. Run the Local Development Server: Navigate to your project directory in the terminal and run:<br>
+`netlify dev` <br>
+This will start a local development server, simulating the Netlify environment, including environment variables and serverless functions.
+
+4. Access The App: Once the server starts, it will provide a local URL (e.g., `http://localhost:8888`) where you can access your app.
 
 ## Development server
 

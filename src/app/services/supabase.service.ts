@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
 
-import {
-  createClient,
-  SupabaseClient
-} from '@supabase/supabase-js'
-import { environment } from 'src/environments/environment'
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { EnvService } from './env.service';
 
 export interface CityData {
   cityId: number,
@@ -24,9 +21,12 @@ export class SupabaseService {
 
   private supabase: SupabaseClient
 
-  constructor() {
+  constructor(
+    envService: EnvService) {
 
-    this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey)
+    const supabaseProjectUrl = envService.getSupabaseProjectUrl;
+    const supabaseApiKey = envService.getSupabaseApiKey;
+    this.supabase = createClient(supabaseProjectUrl, supabaseApiKey)
   }
 
   async loadCityData(): Promise<CityData[]> {

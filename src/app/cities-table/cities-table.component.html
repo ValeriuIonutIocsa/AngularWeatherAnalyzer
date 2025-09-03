@@ -2,7 +2,7 @@
 
     <div class="example-table-container">
 
-        <table mat-table [dataSource]="data" class="example-table" matSort>
+        <table mat-table [dataSource]="dataSource" class="example-table" matSort>
 
             <!-- City Name Column -->
             <ng-container matColumnDef="cityName">
@@ -52,16 +52,22 @@
 
     </div>
 
-    <div class="example-loading" *ngIf="isLoadingResults || failedToReceiveData">
+    @if (isLoadingResults || failedToReceiveData) {
+    <div class="example-loading">
 
+        @if (isLoadingResults) {
         <div class="example-mat-spinner">
-            <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+            <mat-spinner />
         </div>
+        }
 
-        <div class="example-failed-to-receive-data" *ngIf="failedToReceiveData">
-            Failed to recieve data from the server!
+        @if (failedToReceiveData) {
+        <div class="example-failed-to-receive-data">
+            Failed to receive data from the server!
         </div>
+        }
 
     </div>
+    }
 
 </div>

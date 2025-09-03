@@ -1,15 +1,18 @@
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
-import { MatSort, SortDirection } from '@angular/material/sort';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSortModule, MatSort, SortDirection } from '@angular/material/sort';
 import { merge } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { fetchWeatherApi } from 'openmeteo';
 
-import { CityData, HistDataEntry, SupabaseService } from './../supabase.service'
+import { CityData, HistDataEntry, SupabaseService } from '../services/supabase.service'
 
 @Component({
   selector: 'app-cities-table',
   templateUrl: './cities-table.component.html',
-  styleUrls: ['./cities-table.component.css']
+  styleUrls: ['./cities-table.component.css'],
+  imports: [MatSortModule, MatTableModule, MatProgressSpinnerModule]
 })
 export class CitiesTableComponent implements AfterViewInit {
 
@@ -25,9 +28,9 @@ export class CitiesTableComponent implements AfterViewInit {
     'diffLowTemp'
   ];
 
-  data: City[] = [];
-  isLoadingResults: boolean = true;
-  failedToReceiveData: boolean = false;
+  dataSource: MatTableDataSource<City>;
+  isLoadingResults: boolean;
+  failedToReceiveData: boolean;
 
   @ViewChild(MatSort) sort: MatSort;
 
@@ -35,6 +38,10 @@ export class CitiesTableComponent implements AfterViewInit {
     supabase: SupabaseService) {
 
     this.supabase = supabase;
+
+    this.dataSource = new MatTableDataSource([]);
+    this.isLoadingResults = true;
+    this.failedToReceiveData = false;
   }
 
   ngAfterViewInit() {
@@ -43,7 +50,7 @@ export class CitiesTableComponent implements AfterViewInit {
 
       console.log(' --> loading results');
 
-      this.data = [];
+      this.dataSource.data = [];
       this.isLoadingResults = true;
       this.failedToReceiveData = false;
 
@@ -210,8 +217,30 @@ export class CitiesTableComponent implements AfterViewInit {
       }
       return result;
     });
-    this.data = cities;
-    this.isLoadingResults = false;
+
+    this.dataSource.data = cities;
+
+    let failedToReceiveData: boolean = false;
+    cities.forEach(city => {
+      if (this.checkFailedToReceiveData(city)) {
+        failedToReceiveData = true;
+      }
+    });
+
+    queueMicrotask(() => {
+
+      this.isLoadingResults = false;
+      this.failedToReceiveData = failedToReceiveData;
+    });
+  }
+
+  checkFailedToReceiveData(
+    city: City): boolean {
+
+    return city.currLowTemp === undefined ||
+      city.currHighTemp === undefined ||
+      city.histLowTemp === undefined ||
+      city.histHighTemp === undefined;
   }
 
   compareStrings(a: string, b: string) {
